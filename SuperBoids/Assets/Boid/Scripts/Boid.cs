@@ -11,7 +11,7 @@ public class Boid : MonoBehaviour
 {
     //Vector3 _currentPosition;
     Transform _cachedTransform;
-    Transform Target { get; set; } = null;
+    public static Transform Target { get; set; } = null;
 
     private Vector3 _velocity;
 
@@ -34,11 +34,10 @@ public class Boid : MonoBehaviour
     public static bool AllowMoving = true;
     public bool DebugGizmo = false;
 
-    public void Initialize(BoidSettings settings, Transform target = null)
+    public void Initialize(BoidSettings settings)
     {
         _settings = settings;
         _cachedTransform = this.transform;
-        Target = target;
 
         Position = _cachedTransform.position;
         Forward = _cachedTransform.forward;
@@ -136,15 +135,6 @@ public class Boid : MonoBehaviour
 
         return Forward;
     }
-
-    ///// <summary>
-    ///// Identify what direction has no obstacles.
-    ///// </summary>
-    //private Vector3 ObstacleAvoidanceDirection()
-    //{
-    //    RaycastHit hit;
-
-    //}
 
     Vector3 SteerTowards(Vector3 vector)
     {

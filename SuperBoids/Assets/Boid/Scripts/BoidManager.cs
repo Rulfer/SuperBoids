@@ -21,10 +21,12 @@ public class BoidManager : MonoBehaviour
     /// </summary>
     private List<Boid> _boids = new List<Boid>();
 
-    public ComputeShader compute;
+    public ComputeShader _computeFlock;
+    public ComputeShader _computeMovement;
 
     private void Start()
     {
+        _boidSettings.Initialize(inheritedMonoBehaviour: this);
         SpawnBoids();
     }
 
@@ -46,13 +48,13 @@ public class BoidManager : MonoBehaviour
         var boidBuffer = new ComputeBuffer(numBoids, BoidData.Size);
         boidBuffer.SetData(boidData);
 
-        compute.SetBuffer(0, "boids", boidBuffer);
-        compute.SetInt("numBoids", _boids.Count);
-        compute.SetFloat("viewRadius", _boidSettings.perceptionRadius);
-        compute.SetFloat("avoidRadius", _boidSettings.avoidanceRadius);
+        _computeFlock.SetBuffer(0, "boids", boidBuffer);
+        _computeFlock.SetInt("numBoids", _boids.Count);
+        _computeFlock.SetFloat("viewRadius", _boidSettings.perceptionRadius);
+        _computeFlock.SetFloat("avoidRadius", _boidSettings.avoidanceRadius);
 
         int threadGroups = Mathf.CeilToInt(numBoids / (float)threadGroupSize);
-        compute.Dispatch(0, threadGroups, 1, 1);
+        _computeFlock.Dispatch(0, threadGroups, 1, 1);
 
         boidBuffer.GetData(boidData);
 
@@ -78,6 +80,18 @@ public class BoidManager : MonoBehaviour
         //}
     }
 
+    public void SetBoidTarget(Transform target)
+    {
+        _boidSettings.OnFollowTarget();
+        Boid.Target = target;
+    }
+
+    public void ClearBoidTarget()
+    {
+        _boidSettings.OnIdleAround();
+        Boid.Target = null;
+    }
+
     public void SpawnBoids()
     {
         DeleteExistingBoids();
@@ -87,7 +101,7 @@ public class BoidManager : MonoBehaviour
             Vector3 randomPosition = Random.insideUnitSphere * _spawnRadius;
 
             Boid newBoid = Instantiate(_boidPrefab, randomPosition, Quaternion.identity);
-            newBoid.Initialize(_boidSettings, _boidTarget);
+            newBoid.Initialize(_boidSettings);
             _boids.Add(newBoid);
         }
     }

@@ -12,18 +12,58 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b990e51b5fee784ebc883b95d1f43f6, type: 3}
   m_Name: BoidSettings
   m_EditorClassIdentifier: 
-  minSpeed: 2
-  maxSpeed: 5
+  minSpeed: 10
+  maxSpeed: 15
   perceptionRadius: 2.5
   avoidanceRadius: 1
-  maxSteerForce: 5
+  maxSteerForce: 10
+  idleMinSpeed: 2
+  idleMaxSpeed: 5
+  idleMaxSteerForce: 3
+  followTargetMinSpeed: 10
+  followTargetMaxSpeed: 15
+  followTargetMaxSteerForce: 12
   alignWeight: 1
   cohesionWeight: 1
   seperateWeight: 1
-  targetWeight: 1
+  targetWeight: 2
   obstacleMask:
     serializedVersion: 2
     m_Bits: 3072
-  collitionRadius: 0.1
-  avoidCollisionWeight: 10
+  collitionRadius: 0.25
+  avoidCollisionWeight: 61.4
   collisionAvoidDst: 5
+  _timeInSecondsToChangeSpeed: 5
+  _sexyCurves:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.31212816
+      value: 0.58650345
+      inSlope: 1.4101107
+      outSlope: 1.4101107
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.06907131
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
