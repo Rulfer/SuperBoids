@@ -13,12 +13,11 @@ public class Boid : MonoBehaviour
     Transform _cachedTransform;
     public static Transform Target { get; set; } = null;
 
-    private Vector3 _velocity;
-
     private BoidSettings _settings;
 
     public Vector3 Position;
     public Vector3 Forward;
+    public Vector3 Velocity;
 
     // To update:
     [HideInInspector]
@@ -43,7 +42,7 @@ public class Boid : MonoBehaviour
         Forward = _cachedTransform.forward;
 
         float startSpeed = (_settings.minSpeed + _settings.maxSpeed) / 2;
-        _velocity = _cachedTransform.forward * startSpeed;
+        Velocity = _cachedTransform.forward * startSpeed;
     }
 
     /// <summary>
@@ -51,9 +50,6 @@ public class Boid : MonoBehaviour
     /// </summary>
     public void Compute()
     {
-        if (!AllowMoving)
-            return;
-
         Vector3 acceleration = Vector3.zero;
 
         if (Target != null)
@@ -84,13 +80,38 @@ public class Boid : MonoBehaviour
             acceleration += collisionAvoidForce;
         }
 
-        _velocity += acceleration * Time.deltaTime;
-        float speed = _velocity.magnitude;
-        Vector3 dir = _velocity / speed;
+        Velocity += acceleration * Time.deltaTime;
+        float speed = Velocity.magnitude;
+        Vector3 dir = Velocity / speed;
         speed = Mathf.Clamp(speed, _settings.minSpeed, _settings.maxSteerForce);
-        _velocity = dir * speed;
+        Velocity = dir * speed;
 
-        _cachedTransform.position += _velocity * Time.deltaTime;
+        _cachedTransform.position += Velocity * Time.deltaTime;
+        _cachedTransform.forward = dir;
+        Position = _cachedTransform.position;
+        Forward = dir;
+    }
+
+    public void ComputeWithShaderHelp(Vector3 acceleration)
+    {
+        Debug.Log("Is acceleration null? " + acceleration);
+        if (isHeadingForCollision(out Vector3 avoidanceDirection))
+        {
+            // We are about to hit something
+            Vector3 collisionAvoidForce = SteerTowards(avoidanceDirection) * _settings.avoidCollisionWeight;
+            acceleration += collisionAvoidForce;
+        }
+
+        Velocity += acceleration * Time.deltaTime;
+        float speed = Velocity.magnitude;
+        Vector3 dir = Velocity / speed;
+        speed = Mathf.Clamp(speed, _settings.minSpeed, _settings.maxSteerForce);
+        Velocity = dir * speed;
+
+        Debug.Log("Is cachedTransform null? " + _cachedTransform.transform.name);
+        Debug.Log("Is Velocity null? " + Velocity);
+
+        _cachedTransform.position += Velocity * Time.deltaTime;
         _cachedTransform.forward = dir;
         Position = _cachedTransform.position;
         Forward = dir;
@@ -138,7 +159,7 @@ public class Boid : MonoBehaviour
 
     Vector3 SteerTowards(Vector3 vector)
     {
-        Vector3 v = vector.normalized * _settings.maxSpeed - _velocity;
+        Vector3 v = vector.normalized * _settings.maxSpeed - Velocity;
         return Vector3.ClampMagnitude(v, _settings.maxSteerForce);
     }
 

@@ -5,11 +5,14 @@ struct Boid
 {
     float3 position;
     float3 direction;
-
+    float3 velocity;
+    float3 generatedAcceleration;
+    
     float3 flockHeading;
     float3 flockCentre;
-    float3 separationHeading;
+    float3 avoidanceHeading;
     int numFlockmates;
+    int status;
 };
 
 RWStructuredBuffer<Boid> boids;
@@ -17,6 +20,65 @@ int numBoids;
 float viewRadius;
 float avoidRadius;
 
+bool hasTarget;
+float3 targetPosition;
+
+// Settings
+float maxSpeed;
+float maxSteerForce;
+float targetWeight;
+float alignWeight;
+float cohesionWeight;
+float seperateWeight;
+
+float3 SteerTowards(float3 direction, float3 velocity)
+{
+    // Calculate the desired velocity.
+    float3 desiredVelocity = normalize(direction) * maxSpeed - velocity;
+    
+    // Limit the magnitude of the desired velocity.
+    float desiredMagnitude = length(desiredVelocity);
+    if (desiredMagnitude > maxSteerForce)
+    {
+        desiredVelocity = (desiredVelocity / desiredMagnitude) * maxSteerForce;
+    }
+    
+    return desiredVelocity;
+}
+
+//float3 CalculateMovement(Boid boidB)
+//{
+//    // The current boid is not being processed yet.
+//    float3 acceleration = float3(0, 0, 0);
+//    boidB.status = 1;
+            
+//    if (hasTarget)
+//    {
+//        float3 offsetToTarget = targetPosition - boidB.position;
+//        acceleration = SteerTowards(offsetToTarget, boidB.velocity) * targetWeight;
+//        boidB.status = 2;
+//    }
+            
+//    if (boidB.numFlockmates != 0)
+//    {
+//        // This boid has one or more perceived flockmates
+//        boidB.flockCentre /= boidB.numFlockmates;
+//        float3 offsetToFlockmatesCenter = (boidB.flockCentre - boidB.position);
+                
+//        float3 alignmentForce = SteerTowards(boidB.flockHeading * alignWeight, boidB.velocity);
+//        float3 cohesionForce = SteerTowards(boidB.flockCentre * cohesionWeight, boidB.velocity);
+//        float3 seperationForce = SteerTowards(boidB.flockHeading * seperateWeight, boidB.velocity);
+                
+//        acceleration += alignmentForce;
+//        acceleration += cohesionForce;
+//        acceleration += seperationForce;
+//        boidB.status = 3;
+//    }
+//    boidB.status = 4;
+//    return acceleration;
+//}
+
+//[numthreads(8, 8, 1)]
 [numthreads(threadGroupSize, 1, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
@@ -24,6 +86,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     {
         if (id.x != indexB)
         {
+            // Calculate flock behaviour
             Boid boidB = boids[indexB];
             float3 offset = boidB.position - boids[id.x].position;
             float sqrDst = offset.x * offset.x + offset.y * offset.y + offset.z * offset.z;
@@ -36,9 +99,44 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 
                 if (sqrDst < avoidRadius * avoidRadius)
                 {
-                    boids[id.x].separationHeading -= offset / sqrDst;
+                    boids[id.x].avoidanceHeading -= offset / sqrDst;
                 }
             }
+            
+            
+            // Acceleration
+            if (hasTarget)
+            {
+                float3 offsetToTarget = targetPosition - boids[id.x].position;
+                boids[id.x].generatedAcceleration = SteerTowards(offsetToTarget, boids[id.x].velocity) * targetWeight;
+            }
+            
+            if (boids[id.x].numFlockmates != 0)
+            {
+                boids[id.x].status = 0;
+                
+                // This boid has one or more perceived flockmates
+                boids[id.x].flockCentre /= boids[id.x].numFlockmates;
+                float3 offsetToFlockmatesCenter = (boids[id.x].flockCentre - boids[id.x].position);
+                
+                float3 velocity = boids[id.x].velocity;
+                float3 alignmentForce = SteerTowards(boids[id.x].flockHeading * alignWeight, velocity);
+                float3 cohesionForce = SteerTowards(boids[id.x].flockCentre * cohesionWeight, velocity);
+                float3 seperationForce = SteerTowards(boids[id.x].flockHeading * seperateWeight, velocity);
+                
+                boids[id.x].generatedAcceleration += alignmentForce;
+                boids[id.x].generatedAcceleration += cohesionForce;
+                boids[id.x].generatedAcceleration += seperationForce;
+                boids[id.x].status = 4;
+            }
+            
+            //float3 acceleration = CalculateMovement(boidB);
+            //float3 velocity = boids[id.x].velocity + acceleration;
+            
+            // Calculate movement
+            //boids[id.x].velocity = velocity;
+            //boids[id.x].generatedAcceleration = acceleration;
+            
         }
     }
 }

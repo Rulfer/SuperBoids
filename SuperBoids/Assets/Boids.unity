@@ -978,10 +978,10 @@ MonoBehaviour:
   _boidPrefab: {fileID: 4469848375616691516, guid: 657ce0f924d34314da408c57f3063f6f, type: 3}
   _boidSettings: {fileID: 11400000, guid: 184fb184713097a419becacf22e5961d, type: 2}
   _boidTarget: {fileID: 2102707602}
-  _spawnCount: 500
+  _spawnCount: 200
   _spawnRadius: 5
+  _attemptToComputeIndividualBoid: 1
   _computeFlock: {fileID: 7200000, guid: e8793db55f19fdf479119080a1b4fae3, type: 3}
-  _computeMovement: {fileID: 7200000, guid: a7c1cf37718b7754e935567bfb7ee4a9, type: 3}
 --- !u!4 &866001086
 Transform:
   m_ObjectHideFlags: 0
